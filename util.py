@@ -12,12 +12,12 @@ class Util:
 
     def create_folder(self, ip) -> None:
         try:
-            if not os.path.exists(self.get_path()):
-                os.makedirs(self.get_path())
+            if not os.path.exists(self.get_path() + '\\' + ip):
+                os.makedirs(self.get_path() + '\\' + ip)
         except OSError:
             print('Error : Creating directory')
 
-    def get_path(self, ip):
+    def get_file_path(self, ip):
         return self.get_pwd_path() + '\\' + self.YEAR + '\\' + self.MONTH + '\\' + self.DAY + '\\' + ip
     
     def get_path(self):

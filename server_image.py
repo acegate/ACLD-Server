@@ -31,7 +31,7 @@ class Server:
             try:
                 print('>> Server Wait!!')
                 self.client_socket, self.addr = self.server_socket.accept()
-                self.utility.create_folder(self.addr[0])
+                self.utility.create_folder(str(self.addr[0]))
                 self.client_socket.settimeout(100)
                 thread = threading.Thread(target=self.receiveTarget)
                 thread.start()
@@ -45,11 +45,16 @@ class Server:
         while True:
             try:
                 # length = self.recvall(self.client_socket, 64).decode('utf-8')
-                screen_shot = self.recvall_Test()
+                screen_shot = self.recvall(self.client_socket, 4096)
+                encoded_img = np.frombuffer(base64.b64decode(screen_shot), dtype=np.uint8)
+                img_cv = cv2.imdecode(encoded_img, cv2.IMREAD_COLOR)
+
+                print(img_cv)
+                cv2.imwrite(self.utility.get_file_path(str(self.addr[0])) + '\\' + f'{self.addr[0]}_{img_count}.png', img_cv)
+
 
                 # length = self.recvall(self.client_socket ,64)
                 # cam_img = self.recvall_Test()
- 
                 # nowtime = self.recvall_Test()
                 # print(nowtime)
                 # info_length = self.recvall(self.client_socket, 64)
@@ -57,13 +62,13 @@ class Server:
                 # info_decode_length = info_length.decode('utf-8')
                 # infomation = self.recvall_Test()
 
-                screen_shot_data = np.frombuffer(base64.b64decode(screen_shot), dtype='uint8')
+                # screen_shot_data = np.frombuffer(base64.b64decode(screen_shot), dtype='uint8')
                 # cam_img_data = np.frombuffer(base64.b64decode(cam_img), dtype='uint8')
                 
-                decimg = cv2.imdecode(screen_shot_data, 1)
-                cv2.imwrite(self.utility.get_path(self.addr[0]) + '\\' + f'screen_shot_{img_count}.png', decimg)
+                # decimg = cv2.imdecode(screen_shot_data, 1)
+                # cv2.imwrite(self.utility.get_file_path(self.addr[0]) + '\\' + f'screen_shot_{img_count}.png', decimg)
+                
                 # decimg = cv2.imdecode(cam_img_data, cv2.IMREAD_UNCHANGED)
-
                 # cv2.imwrite(self.ROOT_path + '\\' + str(self.addr[0]) + '\\' + f'{self.addr[0]}_{img_count}.png', decimg)
 
                 img_count += 1
@@ -85,19 +90,10 @@ class Server:
         return buf
     
 
-    def recvall_Test(self):
-        data = b""
-        while True:
-            packet = self.client_socket.recv(4096)
-            if not packet:
-                break
-            data += packet
-        return data
-
-    
-
 host_name = socket.gethostname()
 HOST = socket.gethostbyname(host_name)
 PORT = 9999
+
+print(HOST)
 
 server = Server(HOST, PORT)
