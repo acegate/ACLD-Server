@@ -46,46 +46,44 @@ class Server:
         img_count = 0
         while True:
             try:
-                # length = self.recvall(self.client_socket, 64).decode('utf-8')
-                # screen_shot = self.recvall_Test()
-                # length = self.recvall(self.client_socket ,64)
-                # cam_img = self.recvall_Test()
- 
-                # nowtime = self.recvall_Test()
-                # print(nowtime)
-                # info_length = self.recvall(self.client_socket, 64)
 
-                # info_decode_length = info_length.decode('utf-8')
-                # infomation = self.recvall_Test()
+                data1 = self.get_data()
+                self.save_data(data1, img_count, 1)
 
-                # screen_shot_data = np.frombuffer(base64.b64decode(screen_shot), dtype='uint8')
-                # cam_img_data = np.frombuffer(base64.b64decode(cam_img), dtype='uint8')
+                data2 = self.get_data()
+                self.save_data(data2, img_count, 0)
                 
-                # decimg = cv2.imdecode(screen_shot_data, 1)
-                # cv2.imwrite(self.utility.get_path(self.addr[0]) + '\\' + f'screen_shot_{img_count}.png', decimg)
-                # decimg = cv2.imdecode(cam_img_data, cv2.IMREAD_UNCHANGED)
-
-                # cv2.imwrite(self.ROOT_path + '\\' + str(self.addr[0]) + '\\' + f'{self.addr[0]}_{img_count}.png', decimg)
+                data3 = self.get_data()
+                print(data3)
 
                 img_count += 1
                 time.sleep(0.95)
             except Exception as e:
                 print(e)
-                self.get_client().close()
+                self.get_client_socket().close()
                 break
 
     def recive_data(self, count : int) -> bytes:
         buf = b''
         while count:
-            newbuf = self.get_client().recv(count)
+            newbuf = self.get_client_socket().recv(count)
             if not newbuf: return None
             buf += newbuf
             count -= len(newbuf)
         return buf
 
+    def get_data(self):
+        length = self.recive_data(self.STREAM_BYTE).decode('utf-8')
+        print(length)
+        return self.recive_data(int(length))
 
-    def save(self):
-        pass
+    def save_data(self, data, count, flag):
+        decode_data = np.frombuffer(base64.b64decode(data), dtype='uint8')
+        decimg = cv2.imdecode(decode_data, cv2.IMREAD_COLOR)
+        if flag:
+            cv2.imwrite(self.get_util().get_save_path(self.get_client_ip()) + '\\' + f'CAM_{self.get_client_ip()}_{count}.jpg', decimg)
+        else:
+            cv2.imwrite(self.get_util().get_save_path(self.get_client_ip()) + '\\' + f'ScreenShot_{self.get_client_ip()}_{count}.jpg', decimg)
     
     def get_client_ip(self):
         return self.__addr[0]
@@ -111,6 +109,7 @@ class Server:
 
 host_name = socket.gethostname()
 HOST = socket.gethostbyname(host_name)
+print(HOST)
 PORT = 9999
 
 server = Server(HOST, PORT)
