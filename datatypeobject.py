@@ -1,6 +1,4 @@
-import pymysql
 from datetime import datetime
-import time
 
 class Report:
     __report_no_PK = 0
