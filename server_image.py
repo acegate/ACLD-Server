@@ -16,11 +16,19 @@ class Server:
         self.__utility = Util()
         self.COUNT = 0
         self.__client_sockets = []
+        self.__is_alive = False
         self.server_open()
+
+
 
     def server_open(self) -> None:
         self.__server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.get_server_socket().setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 10)
+        self.get_server_socket().setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self.get_server_socket().setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 1)
+        self.get_server_socket().setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL,  3)
+        self.get_server_socket().setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 1)
+
         self.get_server_socket().bind((self.get_host(), self.get_port()))
         self.get_server_socket().listen()
         print('>> Server start')
@@ -31,6 +39,7 @@ class Server:
             try:
                 print('>> Server Wait!!')
                 self.__client_socket, self.__addr = self.get_server_socket().accept()
+                self.set_alive(True)
                 self.get_util().create_folder(self.get_client_ip())
                 self.get_client_socket().settimeout(10000)
                 thread = threading.Thread(target=self.receiveTarget)
@@ -46,7 +55,6 @@ class Server:
         img_count = 0
         while True:
             try:
-
                 data1 = self.get_data()
                 self.save_data(data1, img_count, 1)
 
@@ -58,6 +66,9 @@ class Server:
 
                 img_count += 1
                 time.sleep(0.95)
+            except socket.timeout:
+                self.get_client_socket().close()
+                self.set_alive(False)
             except Exception as e:
                 print(e)
                 self.get_client_socket().close()
@@ -105,7 +116,12 @@ class Server:
     
     def get_util(self):
         return self.__utility
+
+    def is_alive(self):
+        return self.__is_alive
     
+    def set_alive(self, is_alive):
+        self.__is_alive = is_alive
 
 host_name = socket.gethostname()
 HOST = socket.gethostbyname(host_name)
