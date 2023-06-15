@@ -63,7 +63,7 @@ class Server:
                 
                 data3 = self.get_data()
                 print(data3)
-
+                
                 img_count += 1
                 time.sleep(0.95)
             except socket.timeout:
